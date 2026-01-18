@@ -1,0 +1,27 @@
+{
+    "base_color": "#8e44ad",
+    "forecast_color": "#bdc3c7",
+    "today_color": "#2ecc71",
+    "empty_color": "#ebedf0",
+    "empty_color_night": "#282c34",
+    "start_date": "2025-01-01",
+    "days_future": 21,
+    "cell_size": 10,
+    "cell_gap": 2,
+    "border_radius": 2,
+    "display_mode": "volume",
+    "show_graph": true,
+    "monochrome_text": false,
+    "enable_shadows": true,
+    "enable_glass": true,
+    "glass_opacity": 0.4,
+    "active_graphs_v14": [
+        "reviews",
+        "time_card",
+        "retention",
+        "forecast"
+    ],
+    "refresh_interval": 60,
+    "daily_notes": {},
+    "exam_days": {}
+}
