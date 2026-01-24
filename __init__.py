@@ -1,4 +1,4 @@
-# Interactive Heatmap v24.34
+# Interactive Heatmap v24.35
 # Copyright (c) 2026 Jerry Shen
 # License: MIT
 
@@ -16,7 +16,136 @@ from aqt.qt import *
 from aqt.utils import showInfo
 
 ADDON_NAME = "Interactive Heatmap"
-VERSION = "24.34"
+VERSION = "1.2.4"
+
+def _is_dark_mode():
+    """Check if Anki is in dark mode."""
+    try:
+        from aqt.theme import theme_manager
+        return theme_manager.night_mode
+    except:
+        return False
+
+def _get_whats_new_html(dark=False):
+    """Generate What's New HTML with theme-appropriate colors."""
+    if dark:
+        text = "#e0e0e0"
+        subtext = "#9a9a9a"
+        accent = "#b388ff"
+    else:
+        text = "#2d3436"
+        subtext = "#636e72"
+        accent = "#8e44ad"
+
+    return f"""
+<p style="font-family: -apple-system, sans-serif; font-size: 22px; font-weight: 700; color: {text}; text-align: center; margin: 0 0 4px 0;">Interactive Heatmap</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {accent}; font-weight: 600; text-align: center; margin: 0 0 28px 0;">VERSION {VERSION}</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Revamped Settings Menu</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 20px 0;">Settings menu revamped to allow clearer navigation with tabs for adjusting specific settings.</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Modern Browse Menu</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 20px 0;">Browse menu modernization added with autoformatting for cloze cards in the viewer for quick view of cards and tag coloring. You can turn this feature off in settings</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Customizable Thresholds for Heatmap Coloring</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 20px 0;">Color heatmap using your own personal threshold ranges for desired retention and review speed.</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Customizable Average Period</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 20px 0;">Choose how your daily average is calculated: past week, month, year, or all time. Find it in Settings.</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Deck Cards Colors</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 24px 0;">Customize the colors of New, Learning, and Due pills in your deck list. Find it in Settings under Colors.</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Exam Updates</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 24px 0;">Add multiple exams on the same day.</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: {text}; margin: 0 0 4px 0;">Other</p>
+<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: {subtext}; margin: 0 0 24px 0;">Minor bug fixes.</p>
+
+<p style="font-family: -apple-system, sans-serif; font-size: 11px; color: {subtext}; text-align: center; margin: 0;">Thank you for using Interactive Heatmap!</p>
+"""
+
+class WhatsNewDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.dark = _is_dark_mode()
+        self.setWindowTitle(f"What's New")
+        self.setFixedSize(480, 620)
+        self.setup_ui()
+
+    def setup_ui(self):
+        if self.dark:
+            bg_color = "#2d2d2d"
+            btn_area_bg = "#252525"
+            border_color = "#404040"
+        else:
+            bg_color = "#ffffff"
+            btn_area_bg = "#f8f9fa"
+            border_color = "#e9ecef"
+
+        self.setStyleSheet(f"QDialog {{ background: {bg_color}; }}")
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Content area
+        content = QWidget()
+        content.setStyleSheet(f"background: {bg_color};")
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(20, 20, 20, 12)
+
+        label = QLabel(_get_whats_new_html(self.dark))
+        label.setWordWrap(True)
+        label.setTextFormat(Qt.TextFormat.RichText)
+        content_layout.addWidget(label)
+        content_layout.addStretch()
+
+        content.setLayout(content_layout)
+        layout.addWidget(content)
+
+        # Button area
+        btn_container = QWidget()
+        btn_container.setFixedHeight(60)
+        btn_container.setStyleSheet(f"background: {btn_area_bg};")
+        btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(20, 12, 20, 12)
+
+        btn_layout.addStretch()
+        ok_btn = QPushButton("Got it")
+        ok_btn.setFixedSize(90, 34)
+        ok_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        ok_btn.setStyleSheet("""
+            QPushButton {
+                background: #8e44ad;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover { background: #9b59b6; }
+            QPushButton:pressed { background: #7d3c98; }
+        """)
+        ok_btn.clicked.connect(self.accept)
+        btn_layout.addWidget(ok_btn)
+
+        btn_container.setLayout(btn_layout)
+        layout.addWidget(btn_container)
+
+        self.setLayout(layout)
+
+def check_whats_new():
+    """Show What's New dialog if version has changed or on first install."""
+    cfg = get_config()
+    last_version = cfg.get("last_seen_version", "")
+
+    if last_version != VERSION:
+        cfg["last_seen_version"] = VERSION
+        write_config(cfg)
+        mw.progress.timer(500, lambda: WhatsNewDialog(mw).exec(), False)
+
+gui_hooks.profile_did_open.append(check_whats_new)
 
 _ONE_YEAR_AGO = (date.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 
@@ -26,29 +155,38 @@ DEFAULT_CONFIG = {
     "today_color": "#2ecc71",
     "empty_color": "#ebedf0",
     "empty_color_night": "#282c34",
-    "start_date": _ONE_YEAR_AGO, 
-    "days_future": 21,   
-    "cell_size": 10,     
-    "cell_gap": 2,      
+    "graph_reviews_color": "#3498db",
+    "graph_time_color": "#e67e22",
+    "graph_retention_color": "#f1c40f",
+    "graph_forecast_color": "#95a5a6",
+    "start_date": _ONE_YEAR_AGO,
+    "days_future": 21,
+    "cell_size": 10,
+    "cell_gap": 2,
     "border_radius": 2,
     "display_mode": "volume",
     "show_graph": True,
-    "monochrome_text": False, 
+    "monochrome_text": False,
     "enable_shadows": True,
-    "enable_glass": True,      
+    "enable_glass": True,
     "modern_deck_theme": True,
     "enable_deck_glass": True,
     "show_deck_ratio": True,
-    "replace_stats": True, 
-    "glass_opacity": 0.4,    
+    "replace_stats": True,
+    "glass_opacity": 0.4,
     "active_graphs_v14": ["reviews", "time_card", "retention", "forecast"],
     "refresh_interval": 60,
     "daily_notes": {},
     "exam_days": {},
+    "tag_colors": {},
     "retention_min": 75,
     "retention_max": 95,
     "speed_min": 3.0,
-    "speed_max": 15.0
+    "speed_max": 15.0,
+    "avg_period": "year",  # Options: "week", "month", "year", "all"
+    "pill_new_color": "#4a90e2",
+    "pill_learn_color": "#e74c3c",
+    "pill_due_color": "#f1c40f"
 }
 
 refresh_timer = None
@@ -66,148 +204,79 @@ class HeatmapSettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Interactive Heatmap Settings")
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(420)
         self.cfg = get_config()
+        self.color_btns = {}
+        self.color_inputs = {}
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout()
 
-        color_layout = QHBoxLayout()
-        color_layout.addWidget(QLabel("Theme Color:"))
-        
-        self.color_input = QLineEdit()
-        self.color_input.setText(self.cfg.get('base_color', "#8e44ad"))
-        self.color_input.setPlaceholderText("#RRGGBB")
-        self.color_input.setFixedWidth(80)
-        self.color_input.textChanged.connect(self.on_hex_changed)
-        color_layout.addWidget(self.color_input)
+        tabs = QTabWidget()
+        tabs.addTab(self.create_general_tab(), "General")
+        tabs.addTab(self.create_appearance_tab(), "Appearance")
+        tabs.addTab(self.create_colors_tab(), "Colors")
+        tabs.addTab(self.create_graphs_tab(), "Graphs")
+        layout.addWidget(tabs)
 
-        self.color_btn = QPushButton()
-        self.color_btn.setFixedSize(24, 24)
-        self.color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.update_btn_style(self.cfg.get('base_color', "#8e44ad"))
-        self.color_btn.clicked.connect(self.pick_color)
-        color_layout.addWidget(self.color_btn)
-        color_layout.addStretch()
-        layout.addLayout(color_layout)
+        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+        btns.accepted.connect(self.save)
+        btns.rejected.connect(self.reject)
+        layout.addWidget(btns)
+        self.setLayout(layout)
 
-        date_layout = QHBoxLayout()
-        date_layout.addWidget(QLabel("Start Date (YYYY-MM-DD):"))
-        self.date_input = QLineEdit()
-        self.date_input.setText(self.cfg.get('start_date', _ONE_YEAR_AGO))
-        self.date_input.setPlaceholderText("YYYY-MM-DD")
-        date_layout.addWidget(self.date_input)
-        layout.addLayout(date_layout)
+    def create_general_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        heatmap_group = QGroupBox("Heatmap Settings")
+        hm_layout = QVBoxLayout()
 
         combo_layout = QHBoxLayout()
-        combo_layout.addWidget(QLabel("Heatmap Mode:"))
+        combo_layout.addWidget(QLabel("Default Mode:"))
         self.mode_combo = QComboBox()
         self.mode_combo.addItem("Activity Volume", "volume")
         self.mode_combo.addItem("Retention Rate", "retention")
-        self.mode_combo.addItem("Speed (Fast=Bright)", "score") 
-        
+        self.mode_combo.addItem("Review Speed", "score")
         current_mode = self.cfg.get('display_mode', 'volume')
         idx = 0
         if current_mode == 'retention': idx = 1
         elif current_mode == 'score': idx = 2
         self.mode_combo.setCurrentIndex(idx)
         combo_layout.addWidget(self.mode_combo)
-        layout.addLayout(combo_layout)
+        combo_layout.addStretch()
+        hm_layout.addLayout(combo_layout)
 
-        glass_group = QGroupBox("Appearance & Deck Browser")
-        glass_layout = QVBoxLayout()
-        
-        self.chk_glass = QCheckBox("Enable Heatmap Glass Effect")
-        self.chk_glass.setChecked(self.cfg.get("enable_glass", True))
-        glass_layout.addWidget(self.chk_glass)
+        avg_layout = QHBoxLayout()
+        avg_layout.addWidget(QLabel("Average Period:"))
+        self.avg_combo = QComboBox()
+        self.avg_combo.addItem("Past Week", "week")
+        self.avg_combo.addItem("Past Month", "month")
+        self.avg_combo.addItem("Past Year", "year")
+        self.avg_combo.addItem("All Time", "all")
+        current_avg = self.cfg.get('avg_period', 'year')
+        avg_idx = {"week": 0, "month": 1, "year": 2, "all": 3}.get(current_avg, 2)
+        self.avg_combo.setCurrentIndex(avg_idx)
+        avg_layout.addWidget(self.avg_combo)
+        avg_layout.addStretch()
+        hm_layout.addLayout(avg_layout)
 
-        self.chk_replace = QCheckBox("Replace Default Stats (Cuts elements above)")
-        self.chk_replace.setToolTip("If checked, the Heatmap replaces the standard Anki stats at the top.\nIf unchecked, it is appended below them.")
-        self.chk_replace.setChecked(self.cfg.get("replace_stats", True))
-        glass_layout.addWidget(self.chk_replace)
+        date_layout = QHBoxLayout()
+        date_layout.addWidget(QLabel("Start Date:"))
+        self.date_input = QLineEdit()
+        self.date_input.setText(self.cfg.get('start_date', _ONE_YEAR_AGO))
+        self.date_input.setPlaceholderText("YYYY-MM-DD")
+        self.date_input.setFixedWidth(100)
+        date_layout.addWidget(self.date_input)
+        date_layout.addStretch()
+        hm_layout.addLayout(date_layout)
 
-        self.chk_modern = QCheckBox("Enable Modern Deck Theme")
-        self.chk_modern.setChecked(self.cfg.get("modern_deck_theme", True))
-        glass_layout.addWidget(self.chk_modern)
+        heatmap_group.setLayout(hm_layout)
+        layout.addWidget(heatmap_group)
 
-        deck_opts_layout = QVBoxLayout()
-        deck_opts_layout.setContentsMargins(20, 0, 0, 0)
-        
-        self.chk_deck_glass = QCheckBox("Enable Liquid Glass Background")
-        self.chk_deck_glass.setChecked(self.cfg.get("enable_deck_glass", True))
-        deck_opts_layout.addWidget(self.chk_deck_glass)
-
-        self.chk_ratio = QCheckBox("Show Activity Ratio Ring")
-        self.chk_ratio.setChecked(self.cfg.get("show_deck_ratio", True))
-        deck_opts_layout.addWidget(self.chk_ratio)
-        
-        glass_layout.addLayout(deck_opts_layout)
-
-        self.chk_modern.toggled.connect(self.chk_deck_glass.setEnabled)
-        self.chk_modern.toggled.connect(self.chk_ratio.setEnabled)
-        self.chk_deck_glass.setEnabled(self.chk_modern.isChecked())
-        self.chk_ratio.setEnabled(self.chk_modern.isChecked())
-
-        self.chk_monochrome = QCheckBox("High Contrast Text (Disable Colors)")
-        self.chk_monochrome.setChecked(self.cfg.get("monochrome_text", False))
-        glass_layout.addWidget(self.chk_monochrome)
-
-        self.chk_shadows = QCheckBox("Enable Text Shadows")
-        self.chk_shadows.setChecked(self.cfg.get("enable_shadows", True))
-        glass_layout.addWidget(self.chk_shadows)
-
-        self.chk_browser_theme = QCheckBox("Enable Browser Theme")
-        self.chk_browser_theme.setChecked(self.cfg.get("enable_browser_theme", True))
-        glass_layout.addWidget(self.chk_browser_theme)
-
-        slider_layout = QHBoxLayout()
-        slider_layout.addWidget(QLabel("Glass Opacity:"))
-        self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
-        self.opacity_slider.setRange(0, 100)
-        current_opacity = int(self.cfg.get('glass_opacity', 0.4) * 100)
-        self.opacity_slider.setValue(current_opacity)
-        self.opacity_slider.valueChanged.connect(self.update_opacity_label)
-        
-        self.opacity_label = QLabel(f"{current_opacity}%")
-        self.opacity_label.setFixedWidth(35)
-        
-        slider_layout.addWidget(self.opacity_slider)
-        slider_layout.addWidget(self.opacity_label)
-        glass_layout.addLayout(slider_layout)
-        glass_group.setLayout(glass_layout)
-        layout.addWidget(glass_group)
-
-        gb = QGroupBox("Graph Options")
-        gl = QVBoxLayout()
-        
-        self.chk_show_graph = QCheckBox("Show Bottom Graph Panel")
-        self.chk_show_graph.setChecked(self.cfg.get("show_graph", True))
-        gl.addWidget(self.chk_show_graph)
-        
-        gl.addWidget(QLabel("Active Metrics:"))
-        
-        self.chk_rev = QCheckBox("Review Count")
-        self.chk_time = QCheckBox("Time/Card")
-        self.chk_ret = QCheckBox("Retention %")
-        self.chk_fut = QCheckBox("Forecast")
-        
-        active = self.cfg.get("active_graphs_v14", [])
-        self.chk_rev.setChecked("reviews" in active)
-        self.chk_time.setChecked("time_card" in active)
-        self.chk_ret.setChecked("retention" in active)
-        self.chk_fut.setChecked("forecast" in active)
-        
-        gl.addWidget(self.chk_rev)
-        gl.addWidget(self.chk_time)
-        gl.addWidget(self.chk_ret)
-        gl.addWidget(self.chk_fut)
-        
-        gb.setLayout(gl)
-        layout.addWidget(gb)
-
-        heatmap_group = QGroupBox("Heatmap Thresholds")
-        hm_layout = QVBoxLayout()
+        threshold_group = QGroupBox("Thresholds")
+        th_layout = QVBoxLayout()
 
         ret_layout = QHBoxLayout()
         ret_layout.addWidget(QLabel("Retention Range (%):"))
@@ -221,7 +290,7 @@ class HeatmapSettingsDialog(QDialog):
         self.ret_max_input.setValue(int(self.cfg.get('retention_max', 95)))
         ret_layout.addWidget(self.ret_max_input)
         ret_layout.addStretch()
-        hm_layout.addLayout(ret_layout)
+        th_layout.addLayout(ret_layout)
 
         speed_layout = QHBoxLayout()
         speed_layout.addWidget(QLabel("Speed Range (sec):"))
@@ -237,32 +306,267 @@ class HeatmapSettingsDialog(QDialog):
         self.speed_max_input.setValue(float(self.cfg.get('speed_max', 15.0)))
         speed_layout.addWidget(self.speed_max_input)
         speed_layout.addStretch()
-        hm_layout.addLayout(speed_layout)
+        th_layout.addLayout(speed_layout)
+
+        threshold_group.setLayout(th_layout)
+        layout.addWidget(threshold_group)
+
+        other_group = QGroupBox("Other")
+        other_layout = QVBoxLayout()
+
+        self.chk_browser_theme = QCheckBox("Enable Card Browser Theme")
+        self.chk_browser_theme.setToolTip("Apply modern theme styling to the card browser window.")
+        self.chk_browser_theme.setChecked(self.cfg.get("enable_browser_theme", True))
+        other_layout.addWidget(self.chk_browser_theme)
+
+        other_group.setLayout(other_layout)
+        layout.addWidget(other_group)
+
+        layout.addStretch()
+        widget.setLayout(layout)
+        return widget
+
+    def create_appearance_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        heatmap_group = QGroupBox("Heatmap")
+        hm_layout = QVBoxLayout()
+
+        self.chk_glass = QCheckBox("Enable Glass Effect")
+        self.chk_glass.setChecked(self.cfg.get("enable_glass", True))
+        hm_layout.addWidget(self.chk_glass)
+
+        slider_layout = QHBoxLayout()
+        slider_layout.addWidget(QLabel("Glass Opacity:"))
+        self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
+        self.opacity_slider.setRange(0, 100)
+        current_opacity = int(self.cfg.get('glass_opacity', 0.4) * 100)
+        self.opacity_slider.setValue(current_opacity)
+        self.opacity_slider.valueChanged.connect(self.update_opacity_label)
+        self.opacity_label = QLabel(f"{current_opacity}%")
+        self.opacity_label.setFixedWidth(35)
+        slider_layout.addWidget(self.opacity_slider)
+        slider_layout.addWidget(self.opacity_label)
+        hm_layout.addLayout(slider_layout)
+
+        self.chk_replace = QCheckBox("Hide Anki default stats")
+        self.chk_replace.setToolTip("Hides the default 'Studied X cards in Y minutes' message.")
+        self.chk_replace.setChecked(self.cfg.get("replace_stats", True))
+        hm_layout.addWidget(self.chk_replace)
 
         heatmap_group.setLayout(hm_layout)
         layout.addWidget(heatmap_group)
 
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-        btns.accepted.connect(self.save)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
-        self.setLayout(layout)
+        deck_group = QGroupBox("Deck Browser")
+        deck_layout = QVBoxLayout()
+
+        self.chk_modern = QCheckBox("Enable Modern Deck Theme")
+        self.chk_modern.setChecked(self.cfg.get("modern_deck_theme", True))
+        deck_layout.addWidget(self.chk_modern)
+
+        sub_layout = QVBoxLayout()
+        sub_layout.setContentsMargins(20, 0, 0, 0)
+
+        self.chk_deck_glass = QCheckBox("Liquid Glass Background")
+        self.chk_deck_glass.setChecked(self.cfg.get("enable_deck_glass", True))
+        sub_layout.addWidget(self.chk_deck_glass)
+
+        self.chk_ratio = QCheckBox("Activity Ratio Ring")
+        self.chk_ratio.setChecked(self.cfg.get("show_deck_ratio", True))
+        sub_layout.addWidget(self.chk_ratio)
+
+        deck_layout.addLayout(sub_layout)
+
+        self.chk_modern.toggled.connect(self.chk_deck_glass.setEnabled)
+        self.chk_modern.toggled.connect(self.chk_ratio.setEnabled)
+        self.chk_deck_glass.setEnabled(self.chk_modern.isChecked())
+        self.chk_ratio.setEnabled(self.chk_modern.isChecked())
+
+        deck_group.setLayout(deck_layout)
+        layout.addWidget(deck_group)
+
+        text_group = QGroupBox("Text")
+        text_layout = QVBoxLayout()
+
+        self.chk_monochrome = QCheckBox("High Contrast Text (Disable Colors)")
+        self.chk_monochrome.setChecked(self.cfg.get("monochrome_text", False))
+        text_layout.addWidget(self.chk_monochrome)
+
+        self.chk_shadows = QCheckBox("Enable Text Shadows")
+        self.chk_shadows.setChecked(self.cfg.get("enable_shadows", True))
+        text_layout.addWidget(self.chk_shadows)
+
+        text_group.setLayout(text_layout)
+        layout.addWidget(text_group)
+
+        layout.addStretch()
+        widget.setLayout(layout)
+        return widget
+
+    def create_colors_tab(self):
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        # Card Counts (New/Learning/Due)
+        pill_colors = QGroupBox("Card Counts")
+        pc_layout = QGridLayout()
+
+        pill_color_defs = [
+            ("pill_new_color", "New:", "#4a90e2"),
+            ("pill_learn_color", "Learning:", "#e74c3c"),
+            ("pill_due_color", "Due:", "#f1c40f"),
+        ]
+
+        for row, (key, label, default) in enumerate(pill_color_defs):
+            pc_layout.addWidget(QLabel(label), row, 0)
+
+            color_input = QLineEdit()
+            color_input.setText(self.cfg.get(key, default))
+            color_input.setFixedWidth(80)
+            self.color_inputs[key] = color_input
+            pc_layout.addWidget(color_input, row, 1)
+
+            color_btn = QPushButton()
+            color_btn.setFixedSize(24, 24)
+            color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            color_btn.setStyleSheet(f"background-color: {self.cfg.get(key, default)}; border: 1px solid #bdc3c7; border-radius: 4px;")
+            color_btn.clicked.connect(lambda checked, k=key: self.pick_graph_color(k))
+            self.color_btns[key] = color_btn
+            pc_layout.addWidget(color_btn, row, 2)
+
+        pill_colors.setLayout(pc_layout)
+        layout.addWidget(pill_colors)
+
+        # Heatmap Colors
+        heatmap_colors = QGroupBox("Heatmap")
+        hc_layout = QGridLayout()
+
+        color_defs = [
+            ("base_color", "Volume Color:", "#8e44ad"),
+            ("today_color", "Today Cell Border:", "#2ecc71"),
+            ("forecast_color", "Forecast Color:", "#bdc3c7"),
+            ("empty_color", "Empty Cell (Light):", "#ebedf0"),
+            ("empty_color_night", "Empty Cell (Dark):", "#282c34"),
+        ]
+
+        for row, (key, label, default) in enumerate(color_defs):
+            hc_layout.addWidget(QLabel(label), row, 0)
+
+            color_input = QLineEdit()
+            color_input.setText(self.cfg.get(key, default))
+            color_input.setFixedWidth(80)
+            color_input.setPlaceholderText("#RRGGBB")
+            color_input.textChanged.connect(lambda t, k=key: self.on_color_hex_changed(k, t))
+            self.color_inputs[key] = color_input
+            hc_layout.addWidget(color_input, row, 1)
+
+            color_btn = QPushButton()
+            color_btn.setFixedSize(24, 24)
+            color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            color_btn.setStyleSheet(f"background-color: {self.cfg.get(key, default)}; border: 1px solid #bdc3c7; border-radius: 4px;")
+            color_btn.clicked.connect(lambda checked, k=key: self.pick_graph_color(k))
+            self.color_btns[key] = color_btn
+            hc_layout.addWidget(color_btn, row, 2)
+
+        heatmap_colors.setLayout(hc_layout)
+        layout.addWidget(heatmap_colors)
+
+        # Graph Colors
+        graph_colors = QGroupBox("Graph Lines")
+        gc_layout = QGridLayout()
+
+        graph_color_defs = [
+            ("graph_reviews_color", "Reviews:", "#3498db"),
+            ("graph_time_color", "Time/Card:", "#e67e22"),
+            ("graph_retention_color", "Retention:", "#f1c40f"),
+            ("graph_forecast_color", "Forecast:", "#95a5a6"),
+        ]
+
+        for row, (key, label, default) in enumerate(graph_color_defs):
+            gc_layout.addWidget(QLabel(label), row, 0)
+
+            color_input = QLineEdit()
+            color_input.setText(self.cfg.get(key, default))
+            color_input.setFixedWidth(80)
+            color_input.setPlaceholderText("#RRGGBB")
+            color_input.textChanged.connect(lambda t, k=key: self.on_color_hex_changed(k, t))
+            self.color_inputs[key] = color_input
+            gc_layout.addWidget(color_input, row, 1)
+
+            color_btn = QPushButton()
+            color_btn.setFixedSize(24, 24)
+            color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            color_btn.setStyleSheet(f"background-color: {self.cfg.get(key, default)}; border: 1px solid #bdc3c7; border-radius: 4px;")
+            color_btn.clicked.connect(lambda checked, k=key: self.pick_graph_color(k))
+            self.color_btns[key] = color_btn
+            gc_layout.addWidget(color_btn, row, 2)
+
+        graph_colors.setLayout(gc_layout)
+        layout.addWidget(graph_colors)
+
+        layout.addStretch()
+        widget.setLayout(layout)
+        scroll.setWidget(widget)
+        return scroll
+
+    def create_graphs_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        gb = QGroupBox("Graph Panel")
+        gl = QVBoxLayout()
+
+        self.chk_show_graph = QCheckBox("Show Bottom Graph Panel")
+        self.chk_show_graph.setChecked(self.cfg.get("show_graph", True))
+        gl.addWidget(self.chk_show_graph)
+
+        gl.addWidget(QLabel("Active Metrics:"))
+
+        metrics_layout = QVBoxLayout()
+        metrics_layout.setContentsMargins(20, 0, 0, 0)
+
+        self.chk_rev = QCheckBox("Review Count")
+        self.chk_time = QCheckBox("Time/Card")
+        self.chk_ret = QCheckBox("Retention %")
+        self.chk_fut = QCheckBox("Forecast")
+
+        active = self.cfg.get("active_graphs_v14", [])
+        self.chk_rev.setChecked("reviews" in active)
+        self.chk_time.setChecked("time_card" in active)
+        self.chk_ret.setChecked("retention" in active)
+        self.chk_fut.setChecked("forecast" in active)
+
+        metrics_layout.addWidget(self.chk_rev)
+        metrics_layout.addWidget(self.chk_time)
+        metrics_layout.addWidget(self.chk_ret)
+        metrics_layout.addWidget(self.chk_fut)
+
+        gl.addLayout(metrics_layout)
+        gb.setLayout(gl)
+        layout.addWidget(gb)
+
+        layout.addStretch()
+        widget.setLayout(layout)
+        return widget
 
     def update_opacity_label(self, value):
         self.opacity_label.setText(f"{value}%")
 
-    def on_hex_changed(self, text):
-        if QColor.isValidColor(text):
-            self.update_btn_style(text)
+    def on_color_hex_changed(self, key, text):
+        if QColor.isValidColor(text) and key in self.color_btns:
+            self.color_btns[key].setStyleSheet(f"background-color: {text}; border: 1px solid #bdc3c7; border-radius: 4px;")
 
-    def update_btn_style(self, color):
-        self.color_btn.setStyleSheet(f"background-color: {color}; border: 1px solid #bdc3c7; border-radius: 4px;")
-
-    def pick_color(self):
-        c = QColorDialog.getColor(QColor(self.color_input.text()), self)
+    def pick_graph_color(self, key):
+        current = self.color_inputs[key].text()
+        c = QColorDialog.getColor(QColor(current), self)
         if c.isValid():
-            self.color_input.setText(c.name())
-            self.update_btn_style(c.name())
+            self.color_inputs[key].setText(c.name())
+            self.color_btns[key].setStyleSheet(f"background-color: {c.name()}; border: 1px solid #bdc3c7; border-radius: 4px;")
 
     def save(self):
         ag = []
@@ -270,26 +574,23 @@ class HeatmapSettingsDialog(QDialog):
         if self.chk_time.isChecked(): ag.append("time_card")
         if self.chk_ret.isChecked(): ag.append("retention")
         if self.chk_fut.isChecked(): ag.append("forecast")
-        
+
         self.cfg['active_graphs_v14'] = ag
         self.cfg['show_graph'] = self.chk_show_graph.isChecked()
         self.cfg['monochrome_text'] = self.chk_monochrome.isChecked()
         self.cfg['enable_shadows'] = self.chk_shadows.isChecked()
         self.cfg['enable_glass'] = self.chk_glass.isChecked()
         self.cfg['enable_browser_theme'] = self.chk_browser_theme.isChecked()
-        
+
         self.cfg['modern_deck_theme'] = self.chk_modern.isChecked()
         self.cfg['enable_deck_glass'] = self.chk_deck_glass.isChecked()
         self.cfg['show_deck_ratio'] = self.chk_ratio.isChecked()
         self.cfg['replace_stats'] = self.chk_replace.isChecked()
-        
+
         self.cfg['display_mode'] = self.mode_combo.currentData()
+        self.cfg['avg_period'] = self.avg_combo.currentData()
         self.cfg['glass_opacity'] = self.opacity_slider.value() / 100.0
-        
-        final_color = self.color_input.text().strip()
-        if QColor.isValidColor(final_color):
-            self.cfg['base_color'] = final_color
-        
+
         new_date = self.date_input.text().strip()
         try:
             datetime.datetime.strptime(new_date, "%Y-%m-%d")
@@ -301,6 +602,11 @@ class HeatmapSettingsDialog(QDialog):
         self.cfg['speed_min'] = self.speed_min_input.value()
         self.cfg['speed_max'] = self.speed_max_input.value()
 
+        for key, inp in self.color_inputs.items():
+            color = inp.text().strip()
+            if QColor.isValidColor(color):
+                self.cfg[key] = color
+
         write_config(self.cfg)
         self.accept()
         mw.reset()
@@ -309,103 +615,130 @@ class HeatmapNoteDialog(QDialog):
     def __init__(self, date_str, current_note="", exam_data=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"Note for {date_str}")
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(380)
         self.date_str = date_str
         self.note_text = current_note
-        self.exam_data = exam_data
-        self.has_exam = (exam_data is not None)
-        
-        if not self.exam_data:
-            self.exam_data = {"label": "Exam", "color": "#e74c3c"}
-            
+
+        # Convert old single-exam format to list format
+        if exam_data is None:
+            self.exams = []
+        elif isinstance(exam_data, list):
+            self.exams = exam_data.copy()
+        else:
+            # Old format: single dict
+            self.exams = [exam_data]
+
+        self.exam_widgets = []
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
-        exam_group = QGroupBox()
-        exam_layout = QVBoxLayout()
-        exam_layout.setContentsMargins(10,10,10,10)
-        
-        self.chk_exam = QCheckBox("⚠ Mark as Exam/Deadline")
-        self.chk_exam.setChecked(self.has_exam)
-        self.chk_exam.setStyleSheet("font-weight: bold; color: #2c3e50;")
-        self.chk_exam.toggled.connect(self.toggle_exam_options)
-        exam_layout.addWidget(self.chk_exam)
-        
-        self.exam_options = QWidget()
-        opts_layout = QHBoxLayout()
-        opts_layout.setContentsMargins(0, 5, 0, 0)
-        
-        self.lbl_input = QLineEdit()
-        self.lbl_input.setPlaceholderText("Label (e.g. Biology)")
-        self.lbl_input.setText(self.exam_data.get("label", "Exam"))
-        opts_layout.addWidget(self.lbl_input)
-        
-        self.hex_input = QLineEdit()
-        self.hex_input.setPlaceholderText("#RRGGBB")
-        self.hex_input.setFixedWidth(70)
-        self.hex_input.setText(self.exam_data.get("color", "#e74c3c"))
-        self.hex_input.textChanged.connect(self.on_hex_changed)
-        opts_layout.addWidget(self.hex_input)
 
-        self.color_btn = QPushButton()
-        self.color_btn.setFixedSize(24, 24)
-        self.color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.current_color = self.exam_data.get("color", "#e74c3c")
-        self.update_color_btn()
-        self.color_btn.clicked.connect(self.pick_exam_color)
-        opts_layout.addWidget(self.color_btn)
-        
-        self.exam_options.setLayout(opts_layout)
-        exam_layout.addWidget(self.exam_options)
-        
-        exam_group.setLayout(exam_layout)
+        # Exams section
+        exam_group = QGroupBox("Exams / Deadlines")
+        exam_group_layout = QVBoxLayout()
+        exam_group_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Container for exam rows
+        self.exams_container = QWidget()
+        self.exams_layout = QVBoxLayout()
+        self.exams_layout.setContentsMargins(0, 0, 0, 0)
+        self.exams_layout.setSpacing(8)
+        self.exams_container.setLayout(self.exams_layout)
+        exam_group_layout.addWidget(self.exams_container)
+
+        # Add existing exams
+        for exam in self.exams:
+            self.add_exam_row(exam.get("label", "Exam"), exam.get("color", "#e74c3c"))
+
+        # Add exam button
+        add_btn = QPushButton("+ Add Exam")
+        add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_btn.clicked.connect(lambda: self.add_exam_row("", "#e74c3c"))
+        exam_group_layout.addWidget(add_btn)
+
+        exam_group.setLayout(exam_group_layout)
         layout.addWidget(exam_group)
-        
-        self.toggle_exam_options(self.has_exam)
 
+        # Notes section
         lbl = QLabel("Daily Note:")
         layout.addWidget(lbl)
         self.text_edit = QTextEdit()
         self.text_edit.setPlainText(self.note_text)
         self.text_edit.setFixedHeight(80)
         layout.addWidget(self.text_edit)
-        
+
         btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)
         self.setLayout(layout)
 
-    def toggle_exam_options(self, checked):
-        self.exam_options.setVisible(checked)
+    def add_exam_row(self, label="", color="#e74c3c"):
+        row = QWidget()
+        row_layout = QHBoxLayout()
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(6)
 
-    def on_hex_changed(self, text):
-        if QColor.isValidColor(text):
-            self.current_color = text
-            self.update_color_btn()
+        lbl_input = QLineEdit()
+        lbl_input.setPlaceholderText("Label (e.g. Biology)")
+        lbl_input.setText(label)
+        row_layout.addWidget(lbl_input)
 
-    def pick_exam_color(self):
-        c = QColorDialog.getColor(QColor(self.current_color), self)
-        if c.isValid():
-            self.current_color = c.name()
-            self.hex_input.setText(self.current_color)
-            self.update_color_btn()
+        hex_input = QLineEdit()
+        hex_input.setPlaceholderText("#RRGGBB")
+        hex_input.setFixedWidth(70)
+        hex_input.setText(color)
+        row_layout.addWidget(hex_input)
 
-    def update_color_btn(self):
-        self.color_btn.setStyleSheet(f"background-color: {self.current_color}; border: 1px solid #bdc3c7; border-radius: 4px;")
+        color_btn = QPushButton()
+        color_btn.setFixedSize(24, 24)
+        color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        color_btn.setStyleSheet(f"background-color: {color}; border: 1px solid #bdc3c7; border-radius: 4px;")
+
+        def on_hex_change(text, btn=color_btn):
+            if QColor.isValidColor(text):
+                btn.setStyleSheet(f"background-color: {text}; border: 1px solid #bdc3c7; border-radius: 4px;")
+        hex_input.textChanged.connect(on_hex_change)
+
+        def pick_color(checked, inp=hex_input, btn=color_btn):
+            c = QColorDialog.getColor(QColor(inp.text()), self)
+            if c.isValid():
+                inp.setText(c.name())
+                btn.setStyleSheet(f"background-color: {c.name()}; border: 1px solid #bdc3c7; border-radius: 4px;")
+        color_btn.clicked.connect(pick_color)
+        row_layout.addWidget(color_btn)
+
+        del_btn = QPushButton("x")
+        del_btn.setFixedSize(24, 24)
+        del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        del_btn.setStyleSheet("color: #e74c3c; font-weight: bold;")
+        row_layout.addWidget(del_btn)
+
+        row.setLayout(row_layout)
+
+        widget_data = {"row": row, "label": lbl_input, "hex": hex_input, "color_btn": color_btn}
+        self.exam_widgets.append(widget_data)
+        self.exams_layout.addWidget(row)
+
+        def remove_row(checked, wd=widget_data):
+            self.exam_widgets.remove(wd)
+            wd["row"].deleteLater()
+        del_btn.clicked.connect(remove_row)
 
     def get_text(self):
         return self.text_edit.toPlainText().strip()
-        
+
     def get_exam_result(self):
-        if not self.chk_exam.isChecked():
-            return None
-        return {
-            "label": self.lbl_input.text().strip() or "Exam",
-            "color": self.current_color
-        }
+        result = []
+        for wd in self.exam_widgets:
+            label = wd["label"].text().strip()
+            color = wd["hex"].text().strip()
+            if label:  # Only include if label is not empty
+                if not QColor.isValidColor(color):
+                    color = "#e74c3c"
+                result.append({"label": label, "color": color})
+        return result if result else None
 
 class FastEngine:
     def __init__(self):
@@ -438,7 +771,7 @@ class FastEngine:
         start_date = self.get_start_date()
         cutoff_ts = int(time.mktime(start_date.timetuple()) * 1000)
 
-        data = self.col.db.all(f"SELECT id, ease, time, type FROM revlog WHERE id > {cutoff_ts} AND type < 4")
+        data = self.col.db.all(f"SELECT id, cid, ease, time, type FROM revlog WHERE id > {cutoff_ts} AND type < 4 ORDER BY id")
 
         history = {}
         time_history = {}
@@ -448,20 +781,26 @@ class FastEngine:
         today_pass = 0
         today_revs_retention = 0
         today_pass_retention = 0
+        seen_cards = set()
 
-        for (ts, ease, t_taken, rev_type) in data:
+        for (ts, cid, ease, t_taken, rev_type) in data:
             row_dt = datetime.datetime.fromtimestamp((ts - rollover_ms) / 1000)
             d_str = row_dt.strftime("%Y-%m-%d")
             history[d_str] = history.get(d_str, 0) + 1
             time_history[d_str] = time_history.get(d_str, 0) + t_taken
-            if d_str not in retention: retention[d_str] = [0, 0]
-            retention[d_str][1] += 1
-            if ease > 1: retention[d_str][0] += 1
+            is_first_review = cid not in seen_cards
+            seen_cards.add(cid)
+            # Only count retention for reviews, relearns, filtered, and learning cards that aren't first-time
+            if rev_type > 0 or not is_first_review:
+                if d_str not in retention: retention[d_str] = [0, 0]
+                retention[d_str][1] += 1
+                if ease > 1: retention[d_str][0] += 1
             if d_str == today_str:
                 today_revs += 1
                 today_time_ms += t_taken
                 if ease > 1: today_pass += 1
-                if rev_type > 0:
+                # Include reviews, relearns, filtered, and learning cards that aren't first-time
+                if rev_type > 0 or not is_first_review:
                     today_revs_retention += 1
                     if ease > 1: today_pass_retention += 1
 
@@ -540,10 +879,22 @@ class FastEngine:
         today_rate = int((today_pass_retention/today_revs_retention)*100) if today_revs_retention > 0 else 0
         avg_time = round((today_time_ms/today_revs)/1000, 1) if today_revs > 0 else 0
         total_mins = int(round((today_time_ms/1000)/60))
-        
-        total_revs_period = sum(history.values())
-        total_days_active = (today_date - start_date).days + 1
-        daily_avg = int(total_revs_period / max(1, total_days_active))
+
+        # Calculate daily average based on selected period
+        avg_period = self.cfg.get("avg_period", "year")
+        if avg_period == "week":
+            period_start = today_date - timedelta(days=7)
+        elif avg_period == "month":
+            period_start = today_date - timedelta(days=30)
+        elif avg_period == "year":
+            period_start = today_date - timedelta(days=365)
+        else:  # "all"
+            period_start = start_date
+
+        period_revs = sum(v for k, v in history.items()
+                         if datetime.datetime.strptime(k, "%Y-%m-%d").date() >= period_start)
+        period_days = max(1, (today_date - period_start).days + 1)
+        daily_avg = int(period_revs / period_days)
         
         cards_due = 0
         try:
@@ -563,7 +914,7 @@ class FastEngine:
                 elif ords[i] == ords[i-1]: continue
                 else: break
 
-        return history, time_history, retention, forecast, today_revs, today_rate, avg_time, total_mins, cards_due, daily_avg, streak, today_str, start_date, deck_stats
+        return history, time_history, retention, forecast, today_revs, today_rate, avg_time, total_mins, cards_due, daily_avg, streak, today_str, start_date, deck_stats, avg_period
 
     def get_graph_points(self, history, time_hist, retention, forecast, today_str):
         days = 30
@@ -602,7 +953,7 @@ class FastEngine:
                 "fut": f
             })
             
-        def get_path(arr, invert=False, fill=False, is_retention=False):
+        def get_path(arr, invert=False, fill=False, is_retention=False, line_color=None):
             if not arr: return ""
             clean_arr = [x if x is not None else 0 for x in arr]
             mx = max(clean_arr) if max(clean_arr) > 0 else 1
@@ -645,31 +996,33 @@ class FastEngine:
                 d += f" C {cp1x:.1f},{cp1y:.1f} {cp2x:.1f},{cp2y:.1f} {c2[0]:.1f},{c2[1]:.1f}"
             if fill:
                 d_fill = d + f" L {w},{h} L 0,{h} Z"
-                base_c = self.cfg['base_color']
-                return f'<path d="{d_fill}" fill="url(#grad)" stroke="none" /> <path d="{d}" fill="none" stroke="{base_c}" stroke-width="2" />'
-            color = "#f1c40f" if invert else "#95a5a6"
-            if is_retention: color = "#f1c40f"
+                stroke_c = line_color or self.cfg['base_color']
+                return f'<path d="{d_fill}" fill="url(#grad)" stroke="none" /> <path d="{d}" fill="none" stroke="{stroke_c}" stroke-width="2" />'
+            color = line_color or "#95a5a6"
             return f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2" />'
 
         svg_layers = ""
         legend_items = []
         if "reviews" in active:
-            d_rev = get_path(raw_rev, False, True)
+            rev_color = self.cfg.get('graph_reviews_color', '#3498db')
+            d_rev = get_path(raw_rev, False, True, line_color=rev_color)
             svg_layers += d_rev
-            base_c = self.cfg['base_color']
-            legend_items.append(f'<span style="color:{base_c}">■ REVIEWS</span>')
+            legend_items.append(f'<span style="color:{rev_color}">■ REVIEWS</span>')
         if "forecast" in active:
-            d_fut = get_path(raw_fut, False, False)
+            fut_color = self.cfg.get('graph_forecast_color', '#95a5a6')
+            d_fut = get_path(raw_fut, False, False, line_color=fut_color)
             svg_layers += d_fut
-            legend_items.append(f'<span style="color:#95a5a6">■ FORECAST</span>')
+            legend_items.append(f'<span style="color:{fut_color}">■ FORECAST</span>')
         if "time_card" in active:
-            d_time = get_path(raw_time, True, False)
-            svg_layers += d_time.replace('#f1c40f', '#e67e22') 
-            legend_items.append(f'<span style="color:#e67e22">■ TIME/CARD</span>')
+            time_color = self.cfg.get('graph_time_color', '#e67e22')
+            d_time = get_path(raw_time, True, False, line_color=time_color)
+            svg_layers += d_time
+            legend_items.append(f'<span style="color:{time_color}">■ TIME/CARD</span>')
         if "retention" in active:
-            d_ret = get_path(raw_ret, False, False, is_retention=True)
+            ret_color = self.cfg.get('graph_retention_color', '#f1c40f')
+            d_ret = get_path(raw_ret, False, False, is_retention=True, line_color=ret_color)
             svg_layers += d_ret
-            legend_items.append(f'<span style="color:#f1c40f">■ RETENTION</span>')
+            legend_items.append(f'<span style="color:{ret_color}">■ RETENTION</span>')
             
         return svg_layers, meta_data, " &nbsp;&nbsp; ".join(legend_items)
 
@@ -764,31 +1117,43 @@ def get_html_body_content():
     modern_theme = cfg.get("modern_deck_theme", True)
     enable_glass_bg = cfg.get("enable_deck_glass", True)
     show_ratio = cfg.get("show_deck_ratio", True)
-    
+
+    # Pill colors
+    pill_new = cfg.get("pill_new_color", "#4a90e2")
+    pill_learn = cfg.get("pill_learn_color", "#e74c3c")
+    pill_due = cfg.get("pill_due_color", "#f1c40f")
+
     enable_glass = cfg.get("enable_glass", True)
 
     notes = cfg.get('daily_notes', {})
     base_c = cfg.get('base_color', "#8e44ad") 
     
+    # Normalize exam data to list format per day
     raw_exams = cfg.get("exam_days", {})
     exam_days = {}
     if isinstance(raw_exams, list):
+        # Very old format: list of date strings
         for ex_date in raw_exams:
-            exam_days[ex_date] = {"label": "Exam", "color": "#e74c3c"}
+            exam_days[ex_date] = [{"label": "Exam", "color": "#e74c3c"}]
     else:
-        exam_days = raw_exams
+        for ex_date, ex_data in raw_exams.items():
+            if isinstance(ex_data, list):
+                exam_days[ex_date] = ex_data
+            else:
+                # Old format: single dict per day
+                exam_days[ex_date] = [ex_data]
 
-    hist, time_hist, retention, forecast, today_revs, today_rate, avg_time, total_mins, cards_due, daily_avg, streak, today_str, start_dt, deck_stats = eng.get_data()
+    hist, time_hist, retention, forecast, today_revs, today_rate, avg_time, total_mins, cards_due, daily_avg, streak, today_str, start_dt, deck_stats, avg_period = eng.get_data()
     
     deck_stats_json = json.dumps(deck_stats)
     
     svg_paths, meta_data, legend_html = eng.get_graph_points(hist, time_hist, retention, forecast, today_str)
-    
+
     target_cells = 259
     target_end_dt = start_dt + timedelta(days=target_cells - 1)
     min_end_dt = datetime.datetime.strptime(today_str, "%Y-%m-%d").date() + timedelta(days=cfg['days_future'])
     end_dt = max(target_end_dt, min_end_dt)
-    
+
     cell_w = cfg['cell_size'] + cfg['cell_gap']
     total_days = (end_dt - start_dt).days + 1
     num_weeks = (total_days // 7)
@@ -836,62 +1201,72 @@ def get_html_body_content():
         count = hist.get(d_s, 0)
         is_today = (d_s == today_str)
         is_fut = (curr > datetime.datetime.strptime(today_str, "%Y-%m-%d").date())
-        exam_info = exam_days.get(d_s)
-        is_exam = (exam_info is not None)
-        
+        exam_list = exam_days.get(d_s, [])
+        is_exam = len(exam_list) > 0
+
         bg_hex = cfg['empty_color']
-        
-        alpha = 0.2 if enable_glass else 0.4 
-        
+
+        alpha = 0.2 if enable_glass else 0.4
+
         border = "1px solid transparent"
         outline = "none"
         inner_content = ""
-        
+
         t_val = time_hist.get(d_s, 0)
         spd = round((t_val/count)/1000, 1) if count > 0 else 0
         ret_data = retention.get(d_s, [0, 0])
         correct_count = ret_data[0]
         ret_pct = int((ret_data[0]/ret_data[1])*100) if ret_data[1] > 0 else 0
         f_val = forecast.get(d_s, 0)
-        
+
         if count > 0: daily_score = (t_val / count) / 1000
         else: daily_score = 0
-        
+
         info_str = f'{d_nice} &#10; {count} REV'
         if count > 0:
             info_str += f' | {spd} S/C'
             info_str += f' | {ret_pct}% RET'
-        if f_val > 0: 
+        if f_val > 0:
             info_str += f' | {f_val} FUT'
-        
+
         day_note = notes.get(d_s, "").strip()
         if day_note:
             safe_note = day_note.replace('"', "'")
             info_str += f' &#10;&#10; {safe_note}'
-        
-        if is_exam:
-            ex_label = exam_info.get("label", "Exam")
-            ex_color = exam_info.get("color", "#e74c3c")
-            info_str += f" &#10; ⚠ {ex_label.upper()}"
+
+        is_future_exam = is_exam and (is_fut or is_today)
+
+        if is_future_exam:
+            # Use first exam's color for cell background
+            ex_color = exam_list[0].get("color", "#e74c3c")
+            for ex in exam_list:
+                info_str += f" &#10; ⚠ {ex.get('label', 'Exam').upper()}"
             bg_hex = ex_color
             alpha = 1.0
             inner_content = "<div style='display:flex;justify-content:center;align-items:center;height:100%;font-size:8px;color:#fff;font-weight:bold;'>!</div>"
-        
-        legend_info = f"{d_nice} &nbsp;&nbsp; <span style='color:{base_c}'>{count} REV</span>"
+        elif is_exam:
+            for ex in exam_list:
+                info_str += f" &#10; ⚠ {ex.get('label', 'Exam').upper()}"
+
+        rev_c = cfg.get('graph_reviews_color', '#3498db')
+        time_c = cfg.get('graph_time_color', '#e67e22')
+        ret_c = cfg.get('graph_retention_color', '#f1c40f')
+        fut_c = cfg.get('graph_forecast_color', '#95a5a6')
+        legend_info = f"{d_nice} &nbsp;&nbsp; <span style='color:{rev_c}'>{count} REV</span>"
         if count > 0:
-            legend_info += f" &nbsp;&nbsp; <span style='color:#e67e22'>{spd} S/C</span>"
-            legend_info += f" &nbsp;&nbsp; <span style='color:#f1c40f'>{ret_pct}% RET</span>"
+            legend_info += f" &nbsp;&nbsp; <span style='color:{time_c}'>{spd} S/C</span>"
+            legend_info += f" &nbsp;&nbsp; <span style='color:{ret_c}'>{ret_pct}% RET</span>"
         if f_val > 0:
-            legend_info += f" &nbsp;&nbsp; <span style='color:#95a5a6'>{f_val} FUT</span>"
-        if is_exam: 
-            ex_label = exam_info.get("label", "Exam")
-            ex_color = exam_info.get("color", "#e74c3c")
+            legend_info += f" &nbsp;&nbsp; <span style='color:{fut_c}'>{f_val} FUT</span>"
+        for ex in exam_list:
+            ex_label = ex.get("label", "Exam")
+            ex_color = ex.get("color", "#e74c3c")
             legend_info += f" &nbsp;&nbsp; <span style='color:{ex_color}'>⚠ {ex_label.upper()}</span>"
-        
+
         safe_legend = legend_info.replace("'", "&#39;")
         safe_tooltip = info_str.replace('"', '&quot;')
-        
-        if not is_exam: 
+
+        if not is_future_exam:
             if count > 0:
                 if is_ret_mode:
                     rate = (correct_count / ret_data[1]) if ret_data[1] > 0 else 0
@@ -917,7 +1292,8 @@ def get_html_body_content():
         except: rgba_bg = bg_hex
 
         if is_today:
-            outline = "1px solid #000000"
+            today_c = cfg.get('today_color', '#2ecc71')
+            outline = f"2px solid {today_c}"
             if count == 0 and f_val == 0 and not is_exam: rgba_bg = "transparent"
             
         click_cmd = f"heatmap:note:{d_s}"
@@ -944,7 +1320,7 @@ def get_html_body_content():
         c_time = get_speed_color(avg_time)
         c_qual = get_retention_color(today_rate / 100.0)
         base_text_color = base_c
-        
+
     meta_json = json.dumps(meta_data)
 
     vol_class = "active" if curr_mode == "volume" else ""
@@ -988,12 +1364,10 @@ def get_html_body_content():
         deck_css = f"""
         .glass-deck-container {{
             {cont_bg_light}
-            border-radius: 20px !important;
+            border-radius: 16px !important;
             margin: 30px auto !important;
-            padding: 15px 30px !important;
-            width: auto !important;
-            max-width: 800px !important;
-            min-width: 600px !important;
+            padding: 15px !important;
+            width: 540px !important; min-width: 540px !important; max-width: 540px !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }}
         .night_mode .glass-deck-container {{
@@ -1059,9 +1433,9 @@ def get_html_body_content():
             transition: all 0.2s ease;
         }}
         .badge-dim {{ color: currentColor; opacity: 0.15; font-weight: 400; }}
-        .badge-new {{ color: #4a90e2; background: rgba(74, 144, 226, 0.15); border: 1px solid rgba(74, 144, 226, 0.3); }}
-        .badge-lrn {{ color: #e74c3c; background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.3); }}
-        .badge-due {{ color: #f1c40f; background: rgba(241, 196, 15, 0.15); border: 1px solid rgba(241, 196, 15, 0.3); }}
+        .badge-new {{ color: {pill_new}; background: {pill_new}20; border: 1px solid {pill_new}50; }}
+        .badge-lrn {{ color: {pill_learn}; background: {pill_learn}20; border: 1px solid {pill_learn}50; }}
+        .badge-due {{ color: {pill_due}; background: {pill_due}20; border: 1px solid {pill_due}50; }}
         .activity-ring-svg {{
             width: 24px;
             height: 24px;
@@ -1103,10 +1477,10 @@ def get_html_body_content():
         #heatmap-root {{ width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; cursor: default; }}
         #heatmap-root, .leaderboard-wrapper, .ankileaderboard {{ display: block !important; }}
         
-        .hud {{ 
-            padding: 15px; 
-            width: 540px !important; min-width: 540px !important; max-width: 540px !important; 
-            margin: 10px auto; 
+        .hud {{
+            padding: 15px;
+            width: 540px !important; min-width: 540px !important; max-width: 540px !important;
+            margin: 10px auto;
             border-radius: 16px;
             {base_glass}
         }}
@@ -1265,9 +1639,13 @@ def get_html_body_content():
                     const scrollBox = document.getElementById('heatmap-scroll');
                     const tooltip = document.getElementById('heatmap-tooltip');
                     const baseColor = "{cfg['base_color']}";
+                    const revColor = "{cfg.get('graph_reviews_color', '#3498db')}";
+                    const timeColor = "{cfg.get('graph_time_color', '#e67e22')}";
+                    const retColor = "{cfg.get('graph_retention_color', '#f1c40f')}";
+                    const futColor = "{cfg.get('graph_forecast_color', '#95a5a6')}";
                     const defaultHTML = legend ? legend.innerHTML : "";
                     const isMono = {mono_js};
-                    
+
                     const modernTheme = {str(modern_theme).lower()};
                     const showRatio = {str(show_ratio).lower()};
 
@@ -1306,12 +1684,12 @@ def get_html_body_content():
                             if (idx >= 0 && idx < meta.length) {{
                                 const d = meta[idx];
                                 
-                                const c_base = isMono ? "var(--txt)" : baseColor;
-                                const c_time = isMono ? "var(--txt)" : "#e67e22";
-                                const c_ret  = isMono ? "var(--txt)" : "#f1c40f";
-                                const c_fut  = isMono ? "var(--txt)" : "#95a5a6";
-                                
-                                let html = `<span>${{d.label}}</span> &nbsp;&nbsp; <span style="color:${{c_base}}">${{d.rev}} REV</span>`;
+                                const c_rev = isMono ? "var(--txt)" : revColor;
+                                const c_time = isMono ? "var(--txt)" : timeColor;
+                                const c_ret  = isMono ? "var(--txt)" : retColor;
+                                const c_fut  = isMono ? "var(--txt)" : futColor;
+
+                                let html = `<span>${{d.label}}</span> &nbsp;&nbsp; <span style="color:${{c_rev}}">${{d.rev}} REV</span>`;
                                 
                                 if (d.time > 0) html += ` &nbsp;&nbsp; <span style="color:${{c_time}}">${{d.time}} S/C</span>`;
                                 if (d.rev > 0)  html += ` &nbsp;&nbsp; <span style="color:${{c_ret}}">${{d.ret}}% RET</span>`;
@@ -1402,9 +1780,9 @@ def get_html_body_content():
                                 let paths = '';
                                 paths += `<path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
                                 if (done > 0) paths += `<path class="ring-seg" stroke="#2ecc71" stroke-dasharray="${{done_pct}}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
-                                if (n > 0) paths += `<path class="ring-seg" stroke="#4a90e2" stroke-dasharray="${{n_pct}}, 100" stroke-dashoffset="-${{off_n}}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
-                                if (l > 0) paths += `<path class="ring-seg" stroke="#e74c3c" stroke-dasharray="${{l_pct}}, 100" stroke-dashoffset="-${{off_l}}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
-                                if (d > 0) paths += `<path class="ring-seg" stroke="#f1c40f" stroke-dasharray="${{d_pct}}, 100" stroke-dashoffset="-${{off_d}}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
+                                if (n > 0) paths += `<path class="ring-seg" stroke="{pill_new}" stroke-dasharray="${{n_pct}}, 100" stroke-dashoffset="-${{off_n}}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
+                                if (l > 0) paths += `<path class="ring-seg" stroke="{pill_learn}" stroke-dasharray="${{l_pct}}, 100" stroke-dashoffset="-${{off_l}}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
+                                if (d > 0) paths += `<path class="ring-seg" stroke="{pill_due}" stroke-dasharray="${{d_pct}}, 100" stroke-dashoffset="-${{off_d}}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="4" />`;
 
                                 // Add checkmark when all reviews are complete
                                 if (done === total) {{
@@ -1441,39 +1819,16 @@ def get_html_body_content():
 def render(deck_browser, content):
     cfg = get_config()
     setup_timer()
-    
-    js_cleanup = """
-    <script>
-    (function() {
-        function hideDefaultStats() {
-            const overview = document.getElementById('overview');
-            if (!overview) return;
-            const children = overview.childNodes;
-            children.forEach(node => {
-                if (node.textContent && node.textContent.includes('Studied') && node.textContent.includes('cards')) {
-                    if (node.nodeType === 3) { 
-                        node.textContent = '';
-                    } else { 
-                        node.style.display = 'none';
-                    }
-                }
-            });
-        }
-        hideDefaultStats();
-        setTimeout(hideDefaultStats, 50);
-        setTimeout(hideDefaultStats, 300);
-    })();
-    </script>
-    """
-    
+
+    hide_studied_css = ""
+    if cfg.get('replace_stats', True):
+        hide_studied_css = "<style>#studiedToday { display: none !important; }</style>"
+
     try:
         heatmap_html = get_html_body_content()
-        replace_stats = cfg.get('replace_stats', True)
-        
-        if replace_stats:
-            content.stats = js_cleanup + heatmap_html
-        else:
-            content.stats += js_cleanup + heatmap_html
+        existing = content.stats or ""
+
+        content.stats = hide_studied_css + heatmap_html + existing
             
     except Exception as e:
         import traceback
@@ -1487,9 +1842,9 @@ def on_msg(h, m, c):
         cfg = get_config()
         cfg['display_mode'] = new_mode
         write_config(cfg)
-        mw.reset() 
+        mw.reset()
         return True, None
-    
+
     if m.startswith("heatmap:note:"):
         date_str = m.split(":")[2]
         cfg = get_config()
@@ -2278,3 +2633,217 @@ class EditorEnhancer:
         editor.web.eval(injection)
 
 EditorEnhancer()
+
+
+# ===== TAG COLOR MANAGER =====
+# Allows right-click coloring of tags in the browser sidebar
+
+TAG_COLOR_PRESETS = [
+    ("#e74c3c", "Red"),
+    ("#e67e22", "Orange"),
+    ("#f1c40f", "Yellow"),
+    ("#2ecc71", "Green"),
+    ("#1abc9c", "Teal"),
+    ("#3498db", "Blue"),
+    ("#9b59b6", "Purple"),
+    ("#e91e63", "Pink"),
+    ("#795548", "Brown"),
+    ("#607d8b", "Gray"),
+]
+
+
+def _color_icon(color):
+    """Create a small color swatch icon"""
+    pixmap = QPixmap(16, 16)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setBrush(QColor(color))
+    painter.setPen(QColor("#555555"))
+    painter.drawRoundedRect(2, 2, 12, 12, 3, 3)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def _on_browser_sidebar_context_menu(sidebar, menu, item, index):
+    """Add tag color options to the sidebar context menu"""
+    try:
+        from aqt.browser.sidebar import SidebarItemType
+
+        # Only add menu for tags
+        if item.item_type != SidebarItemType.TAG:
+            return
+
+        tag_name = item.full_name
+
+        # Add separator before our options
+        menu.addSeparator()
+
+        # Add color submenu
+        color_menu = menu.addMenu("Set Tag Color")
+
+        # Add preset colors
+        for color, name in TAG_COLOR_PRESETS:
+            action = color_menu.addAction(_color_icon(color), name)
+            action.triggered.connect(
+                lambda checked, c=color, t=tag_name, s=sidebar: _set_tag_color(t, c, s)
+            )
+
+        # Add custom color option
+        color_menu.addSeparator()
+        custom_action = color_menu.addAction("Custom Color...")
+        custom_action.triggered.connect(
+            lambda checked, t=tag_name, s=sidebar: _pick_custom_color(t, s)
+        )
+
+        # Add clear color option if tag has a color
+        cfg = get_config()
+        tag_colors = cfg.get("tag_colors", {})
+        if tag_name in tag_colors:
+            clear_action = menu.addAction("Clear Tag Color")
+            clear_action.triggered.connect(
+                lambda checked, t=tag_name, s=sidebar: _clear_tag_color(t, s)
+            )
+
+    except (ImportError, AttributeError):
+        pass
+
+
+def _set_tag_color(tag_name, color, sidebar):
+    """Set color for a tag"""
+    cfg = get_config()
+    tag_colors = cfg.get("tag_colors", {})
+    tag_colors[tag_name] = color
+    cfg["tag_colors"] = tag_colors
+    write_config(cfg)
+    sidebar.viewport().update()
+
+
+def _pick_custom_color(tag_name, sidebar):
+    """Open color picker for custom color"""
+    cfg = get_config()
+    tag_colors = cfg.get("tag_colors", {})
+    current = tag_colors.get(tag_name, "#8e44ad")
+
+    color = QColorDialog.getColor(QColor(current), sidebar, f"Color for tag: {tag_name}")
+    if color.isValid():
+        _set_tag_color(tag_name, color.name(), sidebar)
+
+
+def _clear_tag_color(tag_name, sidebar):
+    """Remove color from a tag"""
+    cfg = get_config()
+    tag_colors = cfg.get("tag_colors", {})
+    if tag_name in tag_colors:
+        del tag_colors[tag_name]
+        cfg["tag_colors"] = tag_colors
+        write_config(cfg)
+        sidebar.viewport().update()
+
+
+class TagColorDelegate(QStyledItemDelegate):
+    """Custom delegate that renders tags with their assigned colors (text and icon)"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._icon_cache = {}  # Cache colorized icons
+
+    def _colorize_icon(self, icon, color):
+        """Create a colorized version of the icon"""
+        cache_key = (id(icon), color.name())
+        if cache_key in self._icon_cache:
+            return self._icon_cache[cache_key]
+
+        # Get the icon as a pixmap
+        sizes = icon.availableSizes()
+        size = sizes[0] if sizes else QSize(16, 16)
+        pixmap = icon.pixmap(size)
+
+        # Create a colored version
+        colored_pixmap = QPixmap(pixmap.size())
+        colored_pixmap.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(colored_pixmap)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)
+
+        # Draw original pixmap
+        painter.drawPixmap(0, 0, pixmap)
+
+        # Apply color overlay using CompositionMode_SourceIn
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+        painter.fillRect(colored_pixmap.rect(), color)
+
+        painter.end()
+
+        colored_icon = QIcon(colored_pixmap)
+        self._icon_cache[cache_key] = colored_icon
+        return colored_icon
+
+    def initStyleOption(self, option, index):
+        """Modify the style option to change text and icon color for colored tags"""
+        super().initStyleOption(option, index)
+
+        try:
+            from aqt.browser.sidebar import SidebarItemType
+            model = index.model()
+            item = model.item_for_index(index)
+
+            if item and item.item_type == SidebarItemType.TAG:
+                tag_name = item.full_name
+                cfg = get_config()
+                tag_colors = cfg.get("tag_colors", {})
+
+                if tag_name in tag_colors:
+                    color = QColor(tag_colors[tag_name])
+
+                    # Set the text color in the palette
+                    option.palette.setColor(option.palette.ColorRole.Text, color)
+                    option.palette.setColor(option.palette.ColorRole.HighlightedText, color.lighter(150))
+
+                    # Colorize the icon
+                    if not option.icon.isNull():
+                        option.icon = self._colorize_icon(option.icon, color)
+
+        except (ImportError, AttributeError):
+            pass
+
+
+class TagColorManager:
+    """Manages custom colors for tags in the browser sidebar"""
+
+    def __init__(self):
+        self.installed_browsers = set()
+        # Hook into browser show to install delegate
+        gui_hooks.browser_will_show.append(self.on_browser_show)
+        # Hook into sidebar context menu to add our options
+        gui_hooks.browser_sidebar_will_show_context_menu.append(_on_browser_sidebar_context_menu)
+
+    def on_browser_show(self, browser):
+        if id(browser) in self.installed_browsers:
+            return
+        self.installed_browsers.add(id(browser))
+
+        # Get the sidebar tree widget and install delegate
+        sidebar = self._get_sidebar(browser)
+        if sidebar:
+            self._install_tag_delegate(sidebar)
+
+    def _get_sidebar(self, browser):
+        """Get the sidebar tree widget from browser"""
+        try:
+            if hasattr(browser, 'sidebarTree'):
+                return browser.sidebarTree
+            elif hasattr(browser, 'sidebar') and hasattr(browser.sidebar, 'tree'):
+                return browser.sidebar.tree
+        except:
+            pass
+        return None
+
+    def _install_tag_delegate(self, sidebar):
+        """Install a custom delegate that colors tag text"""
+        delegate = TagColorDelegate(sidebar)
+        sidebar.setItemDelegate(delegate)
+
+
+# Initialize tag color manager
+tag_color_manager = TagColorManager()
